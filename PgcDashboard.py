@@ -122,7 +122,7 @@ if st.button("Run Processing") or ('dashboard_data' in st.session_state):
                 if column not in ['Strategy', 'StartTime', 'Points', pivot_index, pivot_column, pivot_value]:
                     unique_values = sorted(filtered_data[column].unique())
                     if len(unique_values) > 1:
-                        filter_values = st.segmented_control(f"***Select {column}***", options=unique_values, selection_mode="multi", default=[unique_values[0]])
+                        filter_values = st.segmented_control(f"***Select {column}***", options=unique_values, selection_mode="multi", default=[unique_values[0]], key=f"seg_control_{column}")
                         filtered_data = filtered_data.filter(pl.col(column).is_in(filter_values))
                     
         filtered_data = filtered_data.to_pandas()
