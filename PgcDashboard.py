@@ -2,7 +2,10 @@ import datetime
 import pandas as pd
 import polars as pl
 import streamlit as st
+import concurrent.futures
 import plotly.express as px
+
+pl.enable_string_cache()
 
 dte_file = pd.read_csv(f"C:/PICKLE/DTE.csv", parse_dates=['Date'], dayfirst=True).set_index("Date")
 
@@ -58,7 +61,15 @@ if st.button("Run Processing") or ('dashboard_data' in st.session_state):
                 for chunk in chunks:
 
                     chunks_file = [f for f in year_day_dte_files[key] if f"{chunk}." in f.name]
-                    data = pl.read_parquet(chunks_file, columns=(name_columns+pnl_columns), use_pyarrow=True)
+                    
+                    def read_and_cast(path):
+                        df = pl.read_parquet(path, columns = (name_columns+pnl_columns))
+                        return df.with_columns([pl.col(name_columns).cast(pl.Utf8).cast(pl.Categorical), pl.col(pnl_columns) .cast(pl.Float64)])
+
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as exe:
+                        dfs = list(exe.map(read_and_cast, chunks_file))
+
+                    data = pl.concat(dfs)
                     data = data.group_by(name_columns).agg([pl.col(col).sum() for col in pnl_columns])
                     data = data.unpivot(index=name_columns, on=pnl_columns, variable_name='PL Basis', value_name='Points')
                     data.columns = [c.replace('P_','') for c in data.columns]
@@ -124,7 +135,7 @@ if st.button("Run Processing") or ('dashboard_data' in st.session_state):
                     if len(unique_values) > 1:
                         filter_values = st.segmented_control(f"***Select {column}***", options=unique_values, selection_mode="multi", default=[unique_values[0]], key=f"seg_control_{column}")
                         filtered_data = filtered_data.filter(pl.col(column).is_in(filter_values))
-                    
+                
         filtered_data = filtered_data.to_pandas()
         
         pivot = pd.pivot_table(
@@ -133,7 +144,8 @@ if st.button("Run Processing") or ('dashboard_data' in st.session_state):
             columns=pivot_column,
             values=pivot_value,
             aggfunc='sum',
-            fill_value=0
+            fill_value=0,
+            observed=True
         ).round(0)
         
         fig = px.imshow(
