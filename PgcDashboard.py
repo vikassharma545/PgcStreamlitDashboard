@@ -39,8 +39,8 @@ def get_year_day_dte_files(parquet_files):
 
     return year_day_dte_files
 
-st.set_page_config(page_title="PGC DashBoard", layout="wide",page_icon="icon.png")
-st.image(image="logo.png", width=300)
+st.set_page_config(page_title="PGC DashBoard", layout="wide",page_icon="https://raw.githubusercontent.com/vikassharma545/PgcStreamlitDashboard/main/img/icon.png")
+st.image(image="https://raw.githubusercontent.com/vikassharma545/PgcStreamlitDashboard/main/img/logo.png", width=300)
 if st.sidebar.button("Build By - Vikas Sharma", type="tertiary", icon=":material/thumb_up:"):
     st.sidebar.balloons()
 
