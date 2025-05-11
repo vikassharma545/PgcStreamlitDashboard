@@ -1,4 +1,5 @@
 import os
+import re
 import datetime
 import pandas as pd
 import polars as pl
@@ -10,6 +11,20 @@ os.environ["POLARS_MAX_THREADS"] = str(max(1, round(os.cpu_count() * 0.7)))
 pl.enable_string_cache()
 
 dte_file = pd.read_csv(f"C:/PICKLE/DTE.csv", parse_dates=['Date'], dayfirst=True).set_index("Date")
+
+def sort_mixed_list(values):
+    
+    def parse_value(value):
+        match = re.match(r"^(\d+\.\d+|\d+)([a-zA-Z]*)$", value)
+        if match:
+            if match.group(2) == "":
+                return (0, float(match.group(1)), "")
+            else:
+                return (1, float(match.group(1)), match.group(2))
+        else:
+            return (2, float('inf'), value)
+        
+    return sorted(values, key=parse_value)
 
 @st.cache_data
 def get_parquet_files(folder_path):
@@ -175,9 +190,13 @@ if folder_path:
                 filtered_data = dashboard_data.filter(filtered_exp)
                 filtered_data = filtered_data.group_by([pivot_index, pivot_column]).agg(pl.col(pivot_value).sum())
                 pivot = filtered_data.to_pandas().set_index([pivot_index, pivot_column]).unstack(fill_value=0).round(0)
+                
+                pivot = pivot.reindex(sort_mixed_list(pivot.index))
+                pivot.columns = [x[1] for x in pivot.columns]
+                pivot = pivot[sort_mixed_list(pivot.columns)]
 
                 agg_func = 'sum'
-                x_value = pivot.columns.get_level_values(1).astype(str)
+                x_value = pivot.columns.astype(str)
                 y_value = pivot.index.astype(str)
                 
                 fig = px.imshow(
