@@ -273,7 +273,7 @@ if folder_path:
                     x_value, y_value = pivot.columns.astype(str), pivot.index.astype(str)
                     fig = px.imshow( pivot.values, x=x_value, y=y_value, color_continuous_scale="RdYlGn", text_auto=True,labels={"color": f"{agg_func} of {pivot_value}"}, aspect="auto")
                     fig.update_layout(title=f"{code} {pivot_index} vs {pivot_column} - {agg_func.upper()} of {pivot_value}", xaxis_title=pivot_column, yaxis_title=pivot_index, autosize=True, height=900,
-                        font=dict( family="Comic Sans MS, Arial, sans-serif", size=20, color="black", weight="bold" ),
+                        font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
                     st.plotly_chart(fig, use_container_width=True)
@@ -294,7 +294,7 @@ if folder_path:
                     x_value, y_value = pivot.columns.astype(str), pivot.index.astype(str)
                     fig = px.imshow( pivot.values, x=x_value, y=y_value, color_continuous_scale="RdYlGn", text_auto=True,labels={"color": f"{agg_func} of {pivot_value}"}, aspect="auto")
                     fig.update_layout(title=f"{code} {pivot_index} vs {pivot_column} - {agg_func.upper()} of {pivot_value}", xaxis_title=pivot_column, yaxis_title=pivot_index, autosize=True, height=900,
-                        font=dict( family="Comic Sans MS, Arial, sans-serif", color="black", weight="bold" ),
+                        font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
                     st.plotly_chart(fig, use_container_width=True)
@@ -315,7 +315,7 @@ if folder_path:
                     x_value, y_value = pivot.columns.astype(str), pivot.index.astype(str)
                     fig = px.imshow( pivot.values, x=x_value, y=y_value, color_continuous_scale="RdYlGn", text_auto=True,labels={"color": f"{agg_func} of {pivot_value}"}, aspect="auto")
                     fig.update_layout(title=f"{code} {pivot_index} vs {pivot_column} - {agg_func.upper()} of {pivot_value}", xaxis_title=pivot_column, yaxis_title=pivot_index, autosize=True, height=900,
-                        font=dict( family="Comic Sans MS, Arial, sans-serif", size=20, color="black", weight="bold" ),
+                        font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
                     st.plotly_chart(fig, use_container_width=True)
@@ -336,7 +336,7 @@ if folder_path:
                     x_value, y_value = pivot.columns.astype(str), pivot.index.astype(str)
                     fig = px.imshow( pivot.values, x=x_value, y=y_value, color_continuous_scale="RdYlGn", text_auto=True,labels={"color": f"{agg_func} of {pivot_value}"}, aspect="auto")
                     fig.update_layout(title=f"{code} {pivot_index} vs {pivot_column} - {agg_func.upper()} of {pivot_value}", xaxis_title=pivot_column, yaxis_title=pivot_index, autosize=True, height=900,
-                        font=dict( family="Comic Sans MS, Arial, sans-serif", size=20, color="black", weight="bold" ),
+                        font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
                     st.plotly_chart(fig, use_container_width=True)
@@ -357,7 +357,7 @@ if folder_path:
                     x_value, y_value = pivot.columns.astype(str), pivot.index.astype(str)
                     fig = px.imshow( pivot.values, x=x_value, y=y_value, color_continuous_scale="RdYlGn", text_auto=True,labels={"color": f"{agg_func} of {pivot_value}"}, aspect="auto")
                     fig.update_layout(title=f"{code} {pivot_index} vs {pivot_column} - {agg_func.upper()} of {pivot_value}", xaxis_title=pivot_column, yaxis_title=pivot_index, autosize=True, height=900,
-                        font=dict( family="Comic Sans MS, Arial, sans-serif", size=20, color="black", weight="bold" ),
+                        font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
                     st.plotly_chart(fig, use_container_width=True)
@@ -378,7 +378,7 @@ if folder_path:
                     x_value, y_value = pivot.columns.astype(str), pivot.index.astype(str)
                     fig = px.imshow( pivot.values, x=x_value, y=y_value, color_continuous_scale="RdYlGn", text_auto=True,labels={"color": f"{agg_func} of {pivot_value}"}, aspect="auto")
                     fig.update_layout(title=f"{code} {pivot_index} vs {pivot_column} - {agg_func.upper()} of {pivot_value}", xaxis_title=pivot_column, yaxis_title=pivot_index, autosize=True, height=900,
-                        font=dict( family="Comic Sans MS, Arial, sans-serif", size=20, color="black", weight="bold" ),
+                        font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
                     st.plotly_chart(fig, use_container_width=True)
@@ -399,7 +399,7 @@ if folder_path:
                     x_value, y_value = pivot.columns.astype(str), pivot.index.astype(str)
                     fig = px.imshow( pivot.values, x=x_value, y=y_value, color_continuous_scale=px.colors.diverging.RdYlGn[::-1], text_auto=True,labels={"color": f"{agg_func} of {pivot_value}"}, aspect="auto")
                     fig.update_layout(title=f"{code} {pivot_index} vs {pivot_column} - {agg_func.upper()} of {pivot_value}", xaxis_title=pivot_column, yaxis_title=pivot_index, autosize=True, height=900,
-                        font=dict( family="Comic Sans MS, Arial, sans-serif", size=20, color="black", weight="bold" ),
+                        font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
                     st.plotly_chart(fig, use_container_width=True)
@@ -420,7 +420,7 @@ if folder_path:
                     x_value, y_value = pivot.columns.astype(str), pivot.index.astype(str)
                     fig = px.imshow( pivot.values, x=x_value, y=y_value, color_continuous_scale=px.colors.diverging.RdYlGn[::-1], text_auto=True,labels={"color": f"{agg_func} of {pivot_value}"}, aspect="auto")
                     fig.update_layout(title=f"{code} {pivot_index} vs {pivot_column} - {agg_func.upper()} of {pivot_value}", xaxis_title=pivot_column, yaxis_title=pivot_index, autosize=True, height=900,
-                        font=dict( family="Comic Sans MS, Arial, sans-serif", size=20, color="black", weight="bold" ),
+                        font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
                     st.plotly_chart(fig, use_container_width=True)
@@ -441,7 +441,7 @@ if folder_path:
                     x_value, y_value = pivot.columns.astype(str), pivot.index.astype(str)
                     fig = px.imshow( pivot.values, x=x_value, y=y_value, color_continuous_scale=px.colors.diverging.RdYlGn[::-1], text_auto=True,labels={"color": f"{agg_func} of {pivot_value}"}, aspect="auto")
                     fig.update_layout(title=f"{code} {pivot_index} vs {pivot_column} - {agg_func.upper()} of {pivot_value}", xaxis_title=pivot_column, yaxis_title=pivot_index, autosize=True, height=900,
-                        font=dict( family="Comic Sans MS, Arial, sans-serif", size=20, color="black", weight="bold" ),
+                        font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
                     st.plotly_chart(fig, use_container_width=True)
