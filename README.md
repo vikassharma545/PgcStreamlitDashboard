@@ -34,6 +34,12 @@ Then, run the desired application using the following commands:
 streamlit run https://raw.githubusercontent.com/vikassharma545/PgcStreamlitDashboard/main/PgcDashboard.py
 ```
 
+### PGC Dashboard V2
+
+```bash
+streamlit run https://raw.githubusercontent.com/vikassharma545/PgcStreamlitDashboard/main/PgcDashboardV2.py
+```
+
 ### Strategy Analysis
 
 ```bash

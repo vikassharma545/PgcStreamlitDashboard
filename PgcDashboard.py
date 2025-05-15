@@ -216,10 +216,8 @@ if folder_path:
                     autosize=True,
                     height=900,
                     font=dict(
-                        family="Arial, sans-serif",
-                        size=20,
-                        color="black",
-                        weight="bold"
+                        family="Comic Sans MS, Arial, sans-serif",
+                        size=20
                     ),
                     xaxis=dict(
                         tickangle=60,
@@ -238,10 +236,8 @@ if folder_path:
                         type="category"
                     ),
                 )
-
                 # Display the heatmap in Streamlit
                 st.plotly_chart(fig, use_container_width=True)
-        
         else:
             st.warning("No Parquet files found in the provided folder path.")
     else:
