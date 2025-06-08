@@ -180,7 +180,7 @@ if folder_path:
                     
                     filtered_exp = []
                     for column in dashboard_data.columns:
-                        if column not in ['Strategy', 'StartTime', 'Points', pivot_index, pivot_column, pivot_value]:
+                        if column not in ['Strategy', 'Points', pivot_index, pivot_column, pivot_value]:
                             unique_values = unique_value_dict[column]
                             if len(unique_values) > 1:
                                 default_values = [unique_values[0]] if column not in ['Year', 'Day', 'DTE'] else unique_values
