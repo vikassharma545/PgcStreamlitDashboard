@@ -15,14 +15,14 @@ dte_file = pd.read_csv(f"C:/PICKLE/DTE.csv", parse_dates=['Date'], dayfirst=True
 def sort_mixed_list(values):
     
     def parse_value(value):
-        match = re.match(r"^(\d+\.\d+|\d+)([a-zA-Z]*)$", value)
+        match = re.match(r"^(-?\d+\.\d+|-?\d+)([.a-zA-Z%]*)$", value)
         if match:
             if match.group(2) == "":
-                return (0, float(match.group(1)), "")
+                return (0, "", float(match.group(1)))
             else:
-                return (1, float(match.group(1)), match.group(2))
+                return (1, match.group(2), float(match.group(1)))
         else:
-            return (2, float('inf'), value)
+            return (2, value, float('inf'))
         
     return sorted(values, key=parse_value)
 
