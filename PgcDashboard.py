@@ -10,8 +10,6 @@ import plotly.express as px
 os.environ["POLARS_MAX_THREADS"] = str(max(1, round(os.cpu_count() * 0.7)))
 pl.enable_string_cache()
 
-dte_file = pd.read_csv(f"C:/PICKLE/DTE.csv", parse_dates=['Date'], dayfirst=True).set_index("Date")
-
 def sort_mixed_list(values):
     
     def parse_value(value):
@@ -59,6 +57,10 @@ st.image(image = "https://raw.githubusercontent.com/vikassharma545/PgcStreamlitD
 if st.sidebar.button("⭐Build By- Vikas Sharma", type="tertiary", icon=":material/thumb_up:"):
     st.sidebar.balloons()
 
+pickle_paths = glob("C:/*PICKLE*/DTE.csv")
+dte_file_path = st.selectbox("Select DTE file", options=pickle_paths, index=0, key="dte_file")
+dte_file = pd.read_csv(dte_file_path, parse_dates=['Date'], dayfirst=True).set_index("Date")
+
 folder_path = st.text_input(label="label", label_visibility="hidden", placeholder="Enter the folder path containing Parquet files")
 
 if folder_path:
@@ -77,7 +79,7 @@ if folder_path:
                 st.write(f"**Indices**: {indices}")
                 st.write(f"**Parameter cols**: {', '.join(name_columns)}")
                 st.write(f"**PNL cols**: {', '.join(pnl_columns)}")
-                
+
             if 'button_clicked' not in st.session_state:
                 st.session_state['button_clicked'] = st.button("Run Processing")
             else:

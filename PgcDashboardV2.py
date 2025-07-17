@@ -118,6 +118,10 @@ st.image(image = "https://raw.githubusercontent.com/vikassharma545/PgcStreamlitD
 if st.sidebar.button("⭐Build By- Vikas Sharma", type="tertiary", icon=":material/thumb_up:"):
     st.sidebar.balloons()
 
+pickle_paths = glob("C:/*PICKLE*/DTE.csv")
+dte_file_path = st.selectbox("Select DTE file", options=pickle_paths, index=0, key="dte_file")
+dte_file = pd.read_csv(dte_file_path, parse_dates=['Date'], dayfirst=True).set_index("Date")
+
 folder_path = st.text_input(label="label", label_visibility="hidden", placeholder="Enter the folder path containing Parquet files")
 
 if folder_path:
