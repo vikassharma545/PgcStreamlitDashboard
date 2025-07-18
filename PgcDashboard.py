@@ -31,8 +31,8 @@ def get_parquet_files(folder_path):
 
 @st.cache_data
 def get_code_index_cols(parquet_files):
-    code = parquet_files[0].split('\\')[-1].split(' ')[2]
-    indices = sorted(set([f.split('\\')[-1].split(' ')[0] for f in parquet_files]))
+    code = parquet_files[0].replace('\\', '/').split('/')[-1].split(' ')[2]
+    indices = sorted(set([f.replace('\\', '/').split('/')[-1].split(' ')[0] for f in parquet_files]))
     
     df = pd.read_parquet(max(parquet_files, key=lambda f: os.path.getsize(f)))
     name_columns = [c for c in list(df.columns) if c.startswith('P_')]
@@ -43,8 +43,8 @@ def get_code_index_cols(parquet_files):
 def get_year_day_dte_files(parquet_files):
     year_day_dte_files = {}
     for file in parquet_files:
-        index = file.split('\\')[-1].split(' ')[0]
-        date = datetime.datetime.strptime(file.split('\\')[-1].split(' ')[1], "%Y-%m-%d")
+        index = file.replace('\\', '/').split('/')[-1].split(' ')[0]
+        date = datetime.datetime.strptime(file.replace('\\', '/').split('/')[-1].split(' ')[1], "%Y-%m-%d")
         year = date.year
         day = date.strftime('%A')
         dte = dte_file.loc[date, index]
