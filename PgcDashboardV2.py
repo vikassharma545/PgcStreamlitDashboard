@@ -5,16 +5,35 @@ import operator
 import numpy as np
 import pandas as pd
 import polars as pl
-from glob import glob
 from numba import njit
 import streamlit as st
+from pathlib import Path
 import concurrent.futures
 import plotly.express as px
 from functools import reduce
+from tkinter import Tk, filedialog
+
 os.environ["POLARS_MAX_THREADS"] = str(max(1, round(os.cpu_count() * 0.7)))
 pl.enable_string_cache()
 
-dte_file = pd.read_csv(f"C:/PICKLE/DTE.csv", parse_dates=['Date'], dayfirst=True).set_index("Date")
+def select_folder_gui(title="Select a Folder") -> Path | None:
+    root = Tk()
+    root.withdraw()
+    root.attributes('-topmost', True) 
+    folder_path = filedialog.askdirectory(title=title, parent=root)
+    root.destroy() 
+    return Path(folder_path) if folder_path else None
+
+def select_file_gui(title="Select a File", filetypes=None) -> Path | None:
+    if filetypes is None:
+        filetypes = [("All files", "*.*")]
+
+    root = Tk()
+    root.withdraw()
+    root.attributes('-topmost', True)  # Ensure the dialog appears on top
+    file_path = filedialog.askopenfilename(title=title, filetypes=filetypes, parent=root)
+    root.destroy()
+    return Path(file_path) if file_path else None
 
 def sort_mixed_list(values):
     
@@ -32,13 +51,14 @@ def sort_mixed_list(values):
 
 @st.cache_data
 def get_parquet_files(folder_path):
-    EXT = "*.parquet"
-    return [file for path, subdir, files in os.walk(folder_path) for file in glob(os.path.join(path, EXT))]
+    root = Path(folder_path).expanduser().resolve()
+    iterator = root.rglob("*.parquet")
+    return sorted(iterator)
 
 @st.cache_data
 def get_code_index_cols(parquet_files):
-    code = parquet_files[0].replace('\\', '/').split('/')[-1].split(' ')[2]
-    indices = sorted(set([f.replace('\\', '/').split('/')[-1].split(' ')[0] for f in parquet_files]))
+    code = parquet_files[0].stem.split()[2]
+    indices = sorted(set([f.stem.split()[0] for f in parquet_files]))
     
     df = pd.read_parquet(max(parquet_files, key=lambda f: os.path.getsize(f)))
     name_columns = [c for c in list(df.columns) if c.startswith('P_')]
@@ -118,13 +138,29 @@ st.image(image = "https://raw.githubusercontent.com/vikassharma545/PgcStreamlitD
 if st.sidebar.button("⭐Build By- Vikas Sharma", type="tertiary", icon=":material/thumb_up:"):
     st.sidebar.balloons()
 
-pickle_paths = glob("C:/*PICKLE*/DTE.csv")
-dte_file_path = st.selectbox("Select DTE file", options=pickle_paths, index=0, key="dte_file")
-dte_file = pd.read_csv(dte_file_path, parse_dates=['Date'], dayfirst=True).set_index("Date")
+def select_dte_file_callback():
+    file = select_file_gui("Select DTE File", filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
+    if file:
+        st.session_state["dte_file_path"] = str(file)
+            
+def select_folder_callback():
+    folder = select_folder_gui("Select Folder containing Parquet files")
+    if folder:
+        st.session_state["folder_path"] = str(folder)
 
-folder_path = st.text_input(label="label", label_visibility="hidden", placeholder="Enter the folder path containing Parquet files")
+st.button("Select DTE File", type="primary", on_click=select_dte_file_callback, key="select_dte_file_button")
+if "dte_file_path" in st.session_state:
+    st.success(f"Selected DTE file: {st.session_state['dte_file_path']}")
+    dte_file_path = st.session_state["dte_file_path"]
+    dte_file = pd.read_csv(dte_file_path, parse_dates=['Date'], dayfirst=True).set_index("Date")
 
-if folder_path:
+st.button("Select Parquet Folder", type="primary", on_click=select_folder_callback, key="select_folder_button")
+if "selected_folder" in st.session_state:
+    st.success(f"Selected folder: {st.session_state['selected_folder']}")
+
+if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
+    
+    folder_path = st.session_state["folder_path"]
     
     if os.path.exists(folder_path):
 
@@ -133,8 +169,8 @@ if folder_path:
         if parquet_files:
             
             code, indices, name_columns, pnl_columns = get_code_index_cols(parquet_files)
-            total_chunk_nos = sorted(set([k.split('-')[-1].split('.')[0] for k in glob(f'{folder_path}/*')]))
-            
+            total_chunk_nos = sorted(set([f.stem.split()[-1] for f in parquet_files]))
+        
             with st.expander("Uploded Files details", expanded=True):
                 st.write(f"**Total File Uploaded**: {len(parquet_files)}")
                 st.write(f"**Code**: {code}")
@@ -160,8 +196,10 @@ if folder_path:
                     
                     dashboard_data_list = []
                     for index in indices:
+
+                        index_files = [f for f in parquet_files if f.stem.split()[0] == index]
+                        chunk_nos = sorted(set([f.stem.split()[-1] for f in index_files]))
                         
-                        chunk_nos = sorted(set([k.split('-')[-1].split('.')[0] for k in glob(f'{folder_path}/{index}*')]))
                         for chunk_no in chunk_nos:
                             
                             if ('dashboard_data' in st.session_state):
@@ -169,9 +207,9 @@ if folder_path:
                                 progress_bar.progress(int((progress_bar_count) / total_steps * 100))
                                 continue
                             
-                            all_files = glob(f'{folder_path}/{index}*No-{chunk_no}.parquet')
-                            if len(all_files) == 0:continue
-                            status_text.text(f"{index} Chunks-{chunk_no} Files-{len(all_files)} - Processing... Step {progress_bar_count+1} of {total_steps} ({(progress_bar_count) / total_steps * 100:.2f}%)")
+                            chunks_file = [f for f in index_files if f.stem.split()[-1] == chunk_no]
+                            if len(chunks_file) == 0:continue
+                            status_text.text(f"{index} Chunks-{chunk_no} Files-{len(chunks_file)} - Processing... Step {progress_bar_count+1} of {total_steps} ({(progress_bar_count) / total_steps * 100:.2f}%)")
 
                             status_text2.text(f"Reading Chunks...")
                             def read_and_cast(path):
@@ -179,7 +217,7 @@ if folder_path:
                                 return df.with_columns([pl.col(name_columns).cast(pl.Utf8).cast(pl.Categorical), pl.col('Date').cast(pl.Date), pl.col('DTE').cast(pl.Int8), pl.col(pnl_columns).cast(pl.Float64)])
 
                             with concurrent.futures.ThreadPoolExecutor(max_workers=7) as exe:
-                                dfs = list(exe.map(read_and_cast, all_files))
+                                dfs = list(exe.map(read_and_cast, chunks_file))
 
                             df = pl.concat(dfs)
                             df.columns = [c.replace('P_','') for c in df.columns]

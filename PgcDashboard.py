@@ -1,14 +1,36 @@
 import os
 import re
+import sys
 import datetime
 import pandas as pd
 import polars as pl
-from glob import glob
 import streamlit as st
+from pathlib import Path
 import concurrent.futures
 import plotly.express as px
+from tkinter import Tk, filedialog
+
 os.environ["POLARS_MAX_THREADS"] = str(max(1, round(os.cpu_count() * 0.7)))
 pl.enable_string_cache()
+
+def select_folder_gui(title="Select a Folder") -> Path | None:
+    root = Tk()
+    root.withdraw()
+    root.attributes('-topmost', True) 
+    folder_path = filedialog.askdirectory(title=title, parent=root)
+    root.destroy() 
+    return Path(folder_path) if folder_path else None
+
+def select_file_gui(title="Select a File", filetypes=None) -> Path | None:
+    if filetypes is None:
+        filetypes = [("All files", "*.*")]
+
+    root = Tk()
+    root.withdraw()
+    root.attributes('-topmost', True)  # Ensure the dialog appears on top
+    file_path = filedialog.askopenfilename(title=title, filetypes=filetypes, parent=root)
+    root.destroy()
+    return Path(file_path) if file_path else None
 
 def sort_mixed_list(values):
     
@@ -26,13 +48,14 @@ def sort_mixed_list(values):
 
 @st.cache_data
 def get_parquet_files(folder_path):
-    EXT = "*.parquet"
-    return [file for path, subdir, files in os.walk(folder_path) for file in glob(os.path.join(path, EXT))]
+    root = Path(folder_path).expanduser().resolve()
+    iterator = root.rglob("*.parquet")
+    return sorted(iterator)
 
 @st.cache_data
 def get_code_index_cols(parquet_files):
-    code = parquet_files[0].replace('\\', '/').split('/')[-1].split(' ')[2]
-    indices = sorted(set([f.replace('\\', '/').split('/')[-1].split(' ')[0] for f in parquet_files]))
+    code = parquet_files[0].stem.split()[2]
+    indices = sorted(set([f.stem.split()[0] for f in parquet_files]))
     
     df = pd.read_parquet(max(parquet_files, key=lambda f: os.path.getsize(f)))
     name_columns = [c for c in list(df.columns) if c.startswith('P_')]
@@ -43,8 +66,8 @@ def get_code_index_cols(parquet_files):
 def get_year_day_dte_files(parquet_files):
     year_day_dte_files = {}
     for file in parquet_files:
-        index = file.replace('\\', '/').split('/')[-1].split(' ')[0]
-        date = datetime.datetime.strptime(file.replace('\\', '/').split('/')[-1].split(' ')[1], "%Y-%m-%d")
+        index = file.stem.split()[0]
+        date = datetime.datetime.strptime(file.stem.split()[1], "%Y-%m-%d")
         year = date.year
         day = date.strftime('%A')
         dte = dte_file.loc[date, index]
@@ -57,13 +80,29 @@ st.image(image = "https://raw.githubusercontent.com/vikassharma545/PgcStreamlitD
 if st.sidebar.button("⭐Build By- Vikas Sharma", type="tertiary", icon=":material/thumb_up:"):
     st.sidebar.balloons()
 
-pickle_paths = glob("C:/*PICKLE*/DTE.csv")
-dte_file_path = st.selectbox("Select DTE file", options=pickle_paths, index=0, key="dte_file")
-dte_file = pd.read_csv(dte_file_path, parse_dates=['Date'], dayfirst=True).set_index("Date")
+def select_dte_file_callback():
+    file = select_file_gui("Select DTE File", filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])
+    if file:
+        st.session_state["dte_file_path"] = str(file)
+            
+def select_folder_callback():
+    folder = select_folder_gui("Select Folder containing Parquet files")
+    if folder:
+        st.session_state["folder_path"] = str(folder)
 
-folder_path = st.text_input(label="label", label_visibility="hidden", placeholder="Enter the folder path containing Parquet files")
+st.button("Select DTE File", type="primary", on_click=select_dte_file_callback, key="select_dte_file_button")
+if "dte_file_path" in st.session_state:
+    st.success(f"Selected DTE file: {st.session_state['dte_file_path']}")
+    dte_file_path = st.session_state["dte_file_path"]
+    dte_file = pd.read_csv(dte_file_path, parse_dates=['Date'], dayfirst=True).set_index("Date")
 
-if folder_path:
+st.button("Select Parquet Folder", type="primary", on_click=select_folder_callback, key="select_folder_button")
+if "selected_folder" in st.session_state:
+    st.success(f"Selected folder: {st.session_state['selected_folder']}")
+
+if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
+    
+    folder_path = st.session_state["folder_path"]
     
     if os.path.exists(folder_path):
 
@@ -106,10 +145,10 @@ if folder_path:
                             progress_bar.progress(int((progress_bar_count) / total_steps * 100))
                             continue
                         
-                        chunks = sorted(set([f.split(' ')[-1].split('.')[0] for f in year_day_dte_files[key]]), key=lambda x: int(x.split('-')[-1]))
+                        chunks = sorted(set([f.stem.split()[-1] for f in year_day_dte_files[key]]), key=lambda x: int(x.split('-')[-1]))
                         for chunk in chunks:
 
-                            chunks_file = [f for f in year_day_dte_files[key] if f"{chunk}." in f]
+                            chunks_file = [f for f in year_day_dte_files[key] if f.stem.split()[-1] == chunk]
                             
                             def read_and_cast(path):
                                 df = pl.read_parquet(path, columns = (name_columns+pnl_columns))
