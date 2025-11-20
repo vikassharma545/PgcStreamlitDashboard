@@ -10,7 +10,6 @@ import concurrent.futures
 import plotly.express as px
 from tkinter import Tk, filedialog
 
-os.environ["POLARS_MAX_THREADS"] = str(max(1, round(os.cpu_count() * 0.7)))
 pl.enable_string_cache()
 
 def select_folder_gui(title="Select a Folder") -> Path | None:
@@ -63,7 +62,7 @@ def get_code_index_cols(parquet_files):
     return code, indices, name_columns, pnl_columns
 
 @st.cache_data
-def get_year_day_dte_files(parquet_files):
+def get_year_day_dte_files(parquet_files, dte_file):
     year_day_dte_files = {}
     for file in parquet_files:
         index = file.stem.split()[0]
@@ -71,7 +70,7 @@ def get_year_day_dte_files(parquet_files):
         year = date.year
         day = date.strftime('%A')
         dte = dte_file.loc[date, index]
-        year_day_dte_files[f'{index}-{year}-{day}-{dte}'] = year_day_dte_files.get(f'{index}-{year}-{day}-{dte}', []) + [file]
+        year_day_dte_files[f'{index}|{year}|{day}|{dte}'] = year_day_dte_files.get(f'{index}|{year}|{day}|{dte}', []) + [file]
 
     return year_day_dte_files
 
@@ -129,7 +128,7 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
                 with st.expander("DashBoard Files details", expanded=True):
                     st.markdown("### Building DashBoard files ...")
                     
-                    year_day_dte_files = get_year_day_dte_files(parquet_files)
+                    year_day_dte_files = get_year_day_dte_files(parquet_files, dte_file)
                     
                     total_steps = len(year_day_dte_files)
                     progress_bar_count = 0
@@ -138,7 +137,7 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
                     
                     dashboard_data_list = []
                     for key, value in year_day_dte_files.items():
-                        index, year, day, dte = key.split('-')
+                        index, year, day, dte = key.split('|')
                         
                         if ('dashboard_data' in st.session_state):
                             progress_bar_count += 1
@@ -278,7 +277,7 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
                     ),
                 )
                 # Display the heatmap in Streamlit
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
         else:
             st.warning("No Parquet files found in the provided folder path.")
     else:

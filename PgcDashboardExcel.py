@@ -12,7 +12,6 @@ import concurrent.futures
 import plotly.express as px
 from tkinter import Tk, filedialog
 
-os.environ["POLARS_MAX_THREADS"] = str(max(1, round(os.cpu_count() * 0.7)))
 pl.enable_string_cache()
 
 def select_folder_gui(title="Select a Folder") -> Path | None:
@@ -79,9 +78,6 @@ def get_year_day_dte_files(parquet_files, dte_file):
 
 st.set_page_config(page_title="PGC DashBoard", layout="wide",page_icon="https://raw.githubusercontent.com/vikassharma545/PgcStreamlitDashboard/main/img/icon.png")
 st.image(image = "https://raw.githubusercontent.com/vikassharma545/PgcStreamlitDashboard/main/img/logo.png", width=100)
-
-# if st.sidebar.button("⭐Build By- Vikas Sharma", type="tertiary", icon=":material/thumb_up:"):
-#     st.sidebar.balloons()
 
 def select_dte_file_callback():
     file = select_file_gui("Select DTE File", filetypes=[("CSV files", "*.csv"), ("All files", "*.*")])

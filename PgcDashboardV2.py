@@ -13,7 +13,6 @@ import plotly.express as px
 from functools import reduce
 from tkinter import Tk, filedialog
 
-os.environ["POLARS_MAX_THREADS"] = str(max(1, round(os.cpu_count() * 0.7)))
 pl.enable_string_cache()
 
 def select_folder_gui(title="Select a Folder") -> Path | None:
@@ -318,7 +317,7 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
                         font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
                     
                 with tab2:
                     
@@ -339,7 +338,7 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
                         font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
                     
                 with tab3:
                     
@@ -360,7 +359,7 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
                         font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
                     
                 with tab4:
                     
@@ -381,7 +380,7 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
                         font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
                     
                 with tab5:
                     
@@ -402,7 +401,7 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
                         font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
                     
                 with tab6:
                     
@@ -423,7 +422,7 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
                         font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
                     
                 with tab7:
                     
@@ -444,7 +443,7 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
                         font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
                     
                 with tab8:
                     
@@ -465,7 +464,7 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
                         font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
                     
                 with tab9:
                     
@@ -486,7 +485,7 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
                         font=dict( family="Comic Sans MS, Arial, sans-serif", size=20),
                         xaxis=dict( tickangle=60, tickmode="array", tickvals=x_value, ticktext=x_value, tickfont=dict(size=18), type="category"),
                         yaxis=dict(tickangle=0, tickmode="array", tickvals=y_value,ticktext=y_value, tickfont=dict(size=18),type="category"),)
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
         
         else:
             st.warning("No Parquet files found in the provided folder path.")
