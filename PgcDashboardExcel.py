@@ -58,7 +58,7 @@ def get_code_index_cols(parquet_files):
     code = parquet_files[0].stem.split()[2]
     indices = sorted(set([f.stem.split()[0] for f in parquet_files]))
     
-    df = pd.read_parquet(max(parquet_files, key=lambda f: os.path.getsize(f)))
+    df = pd.read_parquet(parquet_files[0])
     name_columns = [c for c in list(df.columns) if c.startswith('P_')]
     pnl_columns = [c for c in list(df.columns) if c.endswith('PNL')]
     return code, indices, name_columns, pnl_columns
