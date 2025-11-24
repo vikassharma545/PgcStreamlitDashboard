@@ -160,10 +160,14 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
                             data = data.group_by(name_columns).agg([pl.col(col).sum() for col in pnl_columns])
                             data = data.unpivot(index=name_columns, on=pnl_columns, variable_name='PL Basis', value_name='Points')
                             data.columns = [c.replace('P_','') for c in data.columns]
+                            
+                            data = data.with_columns([
+                                pl.col("PL Basis").cast(pl.Categorical).alias("PL Basis")
+                            ])
 
                             data = data.with_columns([
                                 pl.lit(int(year)).cast(pl.Int16).alias("Year"),
-                                pl.lit(day).cast(pl.String).alias("Day"),
+                                pl.lit(day).cast(pl.Categorical).alias("Day"),
                                 pl.lit(int(float(dte))).cast(pl.Int8).alias("DTE")
                             ])
                             
