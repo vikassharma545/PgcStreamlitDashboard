@@ -1,6 +1,5 @@
 import os
 import re
-import sys
 import datetime
 import pandas as pd
 import polars as pl
@@ -8,6 +7,7 @@ import streamlit as st
 from pathlib import Path
 import concurrent.futures
 import plotly.express as px
+from natsort import natsorted
 from tkinter import Tk, filedialog
 
 pl.enable_string_cache()
@@ -34,16 +34,17 @@ def select_file_gui(title="Select a File", filetypes=None) -> Path | None:
 def sort_mixed_list(values):
     
     def parse_value(value):
-        match = re.match(r"^(-?\d+\.\d+|-?\d+)([.a-zA-Z%]*)$", value)
+        val_str = str(value)
+        match = re.match(r"^(-?\d+\.\d+|-?\d+)([.a-zA-Z%]*)$", val_str)
         if match:
             if match.group(2) == "":
                 return (0, "", float(match.group(1)))
             else:
                 return (1, match.group(2), float(match.group(1)))
         else:
-            return (2, value, float('inf'))
+            return (2, val_str, float('inf'))
         
-    return sorted(values, key=parse_value)
+    return natsorted(values, key=parse_value)
 
 @st.cache_data
 def get_parquet_files(folder_path):
@@ -53,26 +54,53 @@ def get_parquet_files(folder_path):
 
 @st.cache_data
 def get_code_index_cols(parquet_files):
-    code = parquet_files[0].stem.split()[2]
-    indices = sorted(set([f.stem.split()[0] for f in parquet_files]))
+
+    parquet_file_path = max(parquet_files, key=lambda f: os.path.getsize(f))
+    df = pd.read_parquet(parquet_file_path)
+    splits = parquet_file_path.stem.split()
+
+    if len(splits) == 4: # Intraday
+        code_type = "Intraday"
+        index, date, code, chunk = splits
+    elif len(splits) == 6: # Weekly
+        code_type = "Weekly"
+        index, start_date, end_date, dte, code, chunk = splits
     
-    df = pd.read_parquet(parquet_files[0])
+    indices = sorted(set([f.stem.split()[0] for f in parquet_files]))
     name_columns = [c for c in list(df.columns) if c.startswith('P_')]
     pnl_columns = [c for c in list(df.columns) if c.endswith('PNL')]
-    return code, indices, name_columns, pnl_columns
+    return code_type, code, indices, name_columns, pnl_columns
 
 @st.cache_data
-def get_year_day_dte_files(parquet_files, dte_file):
-    year_day_dte_files = {}
-    for file in parquet_files:
-        index = file.stem.split()[0]
-        date = datetime.datetime.strptime(file.stem.split()[1], "%Y-%m-%d")
-        year = date.year
-        day = date.strftime('%A')
-        dte = dte_file.loc[date, index]
-        year_day_dte_files[f'{index}|{year}|{day}|{dte}'] = year_day_dte_files.get(f'{index}|{year}|{day}|{dte}', []) + [file]
+def grouping_parquet_files(parquet_files, dte_file, code_type="Intraday/Weekly"):
 
-    return year_day_dte_files
+    if code_type == "Intraday":
+
+        year_day_dte_files = {}
+        for file in parquet_files:
+            index = file.stem.split()[0]
+            date = datetime.datetime.strptime(file.stem.split()[1], "%Y-%m-%d")
+            year = date.year
+            day = date.strftime('%A')
+            dte = dte_file.loc[date, index]
+            year_day_dte_files[f'{index}-{year}-{day}-{dte}'] = year_day_dte_files.get(f'{index}-{year}-{day}-{dte}', []) + [file]
+
+        return year_day_dte_files
+
+    elif code_type == "Weekly":
+
+        year_dte_files = {}
+        for file in parquet_files:
+            index = file.stem.split()[0]
+            date = datetime.datetime.strptime(file.stem.split()[1], "%Y-%m-%d")
+            year = date.year
+            dte = file.stem.split()[3].replace('-', '_')
+            year_dte_files[f'{index}-{year}-{dte}'] = year_dte_files.get(f'{index}-{year}-{dte}', []) + [file]
+
+        return year_dte_files
+    
+    else:
+        raise ValueError("Invalid code_type. Must be 'Intraday' or 'Weekly'.")
 
 st.set_page_config(page_title="PGC DashBoard", layout="wide",page_icon="https://raw.githubusercontent.com/vikassharma545/PgcStreamlitDashboard/main/img/icon.png")
 st.image(image = "https://raw.githubusercontent.com/vikassharma545/PgcStreamlitDashboard/main/img/logo.png", width=300)
@@ -109,10 +137,11 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
 
         if parquet_files:
             
-            code, indices, name_columns, pnl_columns = get_code_index_cols(parquet_files)
+            code_type, code, indices, name_columns, pnl_columns = get_code_index_cols(parquet_files)
             
             with st.expander("Uploded Files details", expanded=True):
                 st.write(f"**Total File Uploaded**: {len(parquet_files)}")
+                st.write(f"**Code Type**: {code_type}")
                 st.write(f"**Code**: {code}")
                 st.write(f"**Indices**: {indices}")
                 st.write(f"**Parameter cols**: {', '.join(name_columns)}")
@@ -128,55 +157,69 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
                 with st.expander("DashBoard Files details", expanded=True):
                     st.markdown("### Building DashBoard files ...")
                     
-                    year_day_dte_files = get_year_day_dte_files(parquet_files, dte_file)
+                    grouped_parquet = grouping_parquet_files(parquet_files, dte_file, code_type=code_type)
                     
-                    total_steps = len(year_day_dte_files)
+                    total_steps = len(grouped_parquet)
                     progress_bar_count = 0
                     progress_bar = st.progress(progress_bar_count)
                     status_text = st.empty()
                     
                     dashboard_data_list = []
-                    for key, value in year_day_dte_files.items():
-                        index, year, day, dte = key.split('|')
+                    for key, value in grouped_parquet.items():
+                        
+                        if code_type == 'Intraday':
+                            index, year, day, dte = key.split('-')
+                        elif code_type == 'Weekly':
+                            index, year, dte = key.split('-')
                         
                         if ('dashboard_data' in st.session_state):
                             progress_bar_count += 1
                             progress_bar.progress(int((progress_bar_count) / total_steps * 100))
                             continue
                         
-                        chunks = sorted(set([f.stem.split()[-1] for f in year_day_dte_files[key]]), key=lambda x: int(x.split('-')[-1]))
+                        chunks = sorted(set([f.stem.split()[-1] for f in grouped_parquet[key]]), key=lambda x: int(x.split('-')[-1]))
                         for chunk in chunks:
 
-                            chunks_file = [f for f in year_day_dte_files[key] if f.stem.split()[-1] == chunk]
+                            chunks_file = [f for f in grouped_parquet[key] if f.stem.split()[-1] == chunk]
                             
                             def read_and_cast(path):
                                 df = pl.read_parquet(path, columns = (name_columns+pnl_columns))
-                                return df.with_columns([pl.col(name_columns).cast(pl.Utf8).cast(pl.Categorical), pl.col(pnl_columns) .cast(pl.Float64)])
+                                return df.with_columns([pl.col(name_columns).cast(pl.Utf8).cast(pl.Categorical), pl.col(pnl_columns).cast(pl.Float64)])
 
-                            with concurrent.futures.ThreadPoolExecutor(max_workers=7) as exe:
+                            with concurrent.futures.ThreadPoolExecutor() as exe:
                                 dfs = list(exe.map(read_and_cast, chunks_file))
 
                             data = pl.concat(dfs)
                             data = data.group_by(name_columns).agg([pl.col(col).sum() for col in pnl_columns])
                             data = data.unpivot(index=name_columns, on=pnl_columns, variable_name='PL Basis', value_name='Points')
-                            data.columns = [c.replace('P_','') for c in data.columns]
+                            data.columns = [c.replace('P_','', 1) if c.startswith('P_') else c for c in data.columns]
                             
                             data = data.with_columns([
                                 pl.col("PL Basis").cast(pl.Categorical).alias("PL Basis")
                             ])
 
-                            data = data.with_columns([
-                                pl.lit(int(year)).cast(pl.Int16).alias("Year"),
-                                pl.lit(day).cast(pl.Categorical).alias("Day"),
-                                pl.lit(int(float(dte))).cast(pl.Int8).alias("DTE")
-                            ])
+                            if code_type == 'Intraday':
+                                data = data.with_columns([
+                                    pl.lit(int(year)).cast(pl.Int16).alias("Year"),
+                                    pl.lit(day).cast(pl.Categorical).alias("Day"),
+                                    pl.lit(int(float(dte))).cast(pl.Int8).alias("DTE")
+                                ])
+                            elif code_type == 'Weekly':
+                                data = data.with_columns([
+                                    pl.lit(int(year)).cast(pl.Int16).alias("Year"),
+                                    pl.lit(dte).cast(pl.Categorical).alias("Start.DTE-End.DTE")
+                                ])
                             
                             dashboard_data_list.append(data)
 
                         progress_bar_count += 1
                         progress_bar.progress(int((progress_bar_count) / total_steps * 100))
-                        status_text.text(f"{index} {year} {day} {dte} {chunk} - Processing... Step {progress_bar_count} of {total_steps} ({(progress_bar_count) / total_steps * 100:.2f}%)")
-                    
+                        
+                        if code_type == 'Intraday':
+                            status_text.text(f"{index} {year} {day} {dte} - Processing... Step {progress_bar_count} of {total_steps} ({(progress_bar_count) / total_steps * 100:.2f}%)")
+                        elif code_type == 'Weekly':
+                            status_text.text(f"{index} {year} {dte} - Processing... Step {progress_bar_count} of {total_steps} ({(progress_bar_count) / total_steps * 100:.2f}%)")
+
                     if ('dashboard_data' not in st.session_state):
                         dashboard_data = pl.concat(dashboard_data_list, how="vertical")
                         st.session_state.dashboard_data = dashboard_data
@@ -214,7 +257,7 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
                     pivot_value = st.selectbox("Select Values", options=dashboard_data.columns, index=list(dashboard_data.columns).index('Points'))
                     
                 if "unique_values" not in st.session_state:
-                    unique_value_dict = {column:sorted(dashboard_data[column].unique()) for column in dashboard_data.columns if column not in ['Points']}
+                    unique_value_dict = {column:sort_mixed_list(dashboard_data[column].unique()) for column in dashboard_data.columns if column not in ['Strategy', 'Points']}
                     st.session_state['unique_values'] = unique_value_dict
                 else:
                     unique_value_dict = st.session_state['unique_values']
@@ -227,7 +270,12 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
                         if column not in ['Strategy', 'Points', pivot_index, pivot_column, pivot_value]:
                             unique_values = unique_value_dict[column]
                             if len(unique_values) > 1:
-                                default_values = [unique_values[0]] if column not in ['Year', 'Day', 'DTE'] else unique_values
+                                
+                                if code_type == 'Intraday':
+                                    default_values = [unique_values[0]] if column not in ['Year', 'Day', 'DTE'] else unique_values
+                                elif code_type == 'Weekly':
+                                    default_values = [unique_values[0]] if column not in ['Year', 'Start.DTE-End.DTE'] else unique_values
+
                                 filter_values = st.segmented_control(f"***Select {column}***", options=unique_values, selection_mode="multi", default=default_values, key=f"seg_control_{column}")
                                 filtered_exp.append(pl.col(column).is_in(filter_values))
         
