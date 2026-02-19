@@ -70,7 +70,8 @@ def mapping_dashboard_files(parquet_files, code_type):
         columns = ['Index', 'Year', 'Day', 'DTE', 'PL Basis', 'FilePath']
         
         for file in parquet_files:
-            parts = file.stem.split('-')
+            parts = file.stem.replace('--', '-@').split('-')
+            parts = [p.replace('@', '-') for p in parts]
             # Extract specific parts: Year (1), Day (2), DTE (3), PL Basis (4)
             data.append([file.parts[-2], int(parts[1]), parts[2], float(parts[3]), parts[4], file.as_posix()])
             
@@ -78,7 +79,8 @@ def mapping_dashboard_files(parquet_files, code_type):
         columns = ['Index', 'Year', 'Start.DTE-End.DTE', 'PL Basis', 'FilePath']
         
         for file in parquet_files:
-            parts = file.stem.split('-')
+            parts = file.stem.replace('--', '-@').split('-')
+            parts = [p.replace('@', '-') for p in parts]
             # Extract specific parts: Year (1), Start.DTE-End.DTE (2), PL Basis (3)
             data.append([file.parts[-2], int(parts[1]), parts[2], parts[3], file.as_posix()])
 
