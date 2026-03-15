@@ -11,6 +11,7 @@ from pathlib import Path
 import concurrent.futures
 import plotly.express as px
 from functools import reduce
+from natsort import natsorted
 from tkinter import Tk, filedialog
 
 pl.enable_string_cache()
@@ -37,16 +38,17 @@ def select_file_gui(title="Select a File", filetypes=None) -> Path | None:
 def sort_mixed_list(values):
     
     def parse_value(value):
-        match = re.match(r"^(-?\d+\.\d+|-?\d+)([.a-zA-Z%]*)$", value)
+        val_str = str(value)
+        match = re.match(r"^(-?\d+\.\d+|-?\d+)([.a-zA-Z%]*)$", val_str)
         if match:
             if match.group(2) == "":
                 return (0, "", float(match.group(1)))
             else:
                 return (1, match.group(2), float(match.group(1)))
         else:
-            return (2, value, float('inf'))
+            return (2, val_str, float('inf'))
         
-    return sorted(values, key=parse_value)
+    return natsorted(values, key=parse_value)
 
 @st.cache_data
 def get_parquet_files(folder_path):
@@ -267,10 +269,10 @@ if "dte_file_path" in st.session_state and "folder_path" in st.session_state:
                 with col5:
                     end_date = st.date_input("End Date", "today", key="end_date")
                 with col6:
-                    dtes = st.segmented_control(f"***Select DTE***", options=sorted(dashboard_data['DTE'].unique()), selection_mode="multi", default=[1], key="DTE")
+                    dtes = st.segmented_control(f"***Select DTE***", options=natsorted(dashboard_data['DTE'].unique()), selection_mode="multi", default=[1], key="DTE")
                     
                 if "unique_values" not in st.session_state:
-                    unique_value_dict = {column:sorted(dashboard_data[column].unique()) for column in dashboard_data.columns if not (column in ['Date', 'DTE'] + pnl_columns)}
+                    unique_value_dict = {column:natsorted(dashboard_data[column].unique()) for column in dashboard_data.columns if not (column in ['Date', 'DTE'] + pnl_columns)}
                     st.session_state['unique_values'] = unique_value_dict
                 else:
                     unique_value_dict = st.session_state['unique_values']
